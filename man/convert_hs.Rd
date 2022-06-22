@@ -20,11 +20,17 @@ convert_hs(correspondence_table, hs_from, hs_to, df, map_df = NA)
 \value{
 A \code{dataframe} containing the following columns:
 
-\item{first}{the 'to' product code}
-\item{second}{the 'from' product code}
-\item{first_name}{the hs version of the 'to' product code}
-\item{second_name}{the hs version of the 'from' product code}
-\item{relationship}{the correspondence type of this product pair, e.g. 1:n, n:n, etc.}
+\itemize{
+\item{hs_version}{the HS version of the data} 
+\item{year}{the year of the trade data}
+\item{flow_code}{code of the trade flow (export, import, etc.)}
+\item{flow}{the name of the trade flow}
+\item{reporter_code}{the code of the reporter country}
+\item{reporter}{the name of the reporter country}
+\item{partner_code}{the code of the partner country}
+\item{partner}{the name of the partner country}
+\item{commodity_code}{the commodity code}
+\item{value}{the value of recorded trade}}
 }
 \description{
 Convert Comtrade data from one HS year to another

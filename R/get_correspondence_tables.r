@@ -1,7 +1,7 @@
 #' @import dplyr httr stringr readxl
 #' @title Get correspondence tables from UN stat
 #' @name get_correspondence_tables
-#' @description Gets all correspondence tables from the UN and generates a CSV with all the mappings
+#' @description Gets all correspondence tables from the UN and generates a CSV with all the mappings. To avoid pinging the UN's servers too often, the output can be saved to a CSV and reread from there.
 #' @return A \code{dataframe} containing the following columns:
 #' 
 #' \item{first}{the 'to' product code}

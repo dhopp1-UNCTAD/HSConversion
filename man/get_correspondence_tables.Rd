@@ -16,5 +16,5 @@ A \code{dataframe} containing the following columns:
 \item{relationship}{the correspondence type of this product pair, e.g. 1:n, n:n, etc.}
 }
 \description{
-Gets all correspondence tables from the UN and generates a CSV with all the mappings
+Gets all correspondence tables from the UN and generates a CSV with all the mappings. To avoid pinging the UN's servers too often, the output can be saved to a CSV and reread from there.
 }
