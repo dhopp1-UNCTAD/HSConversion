@@ -7,7 +7,7 @@
 get_correspondence_tables()
 }
 \value{
-A \code{dataframe} containing the following columns, also writes the dataframe to \code{data/full_correspondence_tables.csv}:
+A \code{dataframe} containing the following columns:
 
 \item{first}{the 'to' product code}
 \item{second}{the 'from' product code}

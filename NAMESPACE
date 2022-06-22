@@ -3,3 +3,6 @@
 export(convert_hs)
 export(get_correspondence_tables)
 import(dplyr)
+import(httr)
+import(readxl)
+import(stringr)

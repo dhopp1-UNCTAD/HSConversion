@@ -5,7 +5,7 @@
 #' @param hs_from Integer of which HS year the original data is in (e.g., '2017').
 #' @param hs_to Integer of which HS year the data should be converted to (e.g., '2017').
 #' @param df The original dataframe to convert.
-#' @param df_map A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings.
+#' @param map_df A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings.
 #' @return A \code{dataframe} containing the following columns:
 #' 
 #' \item{first}{the 'to' product code}

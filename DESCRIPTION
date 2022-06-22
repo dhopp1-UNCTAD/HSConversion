@@ -4,10 +4,13 @@ Version: 1.0.0
 Authors@R: c(
 	person("Daniel", "Hopp", email = "daniel.hopp@un.org", role = c("aut", "cre"))
 	)
-Description: Convert Comtrade data from one HS year to another
+Description: Convert Comtrade data from one HS year to another.
 Depends: 
 	R (>= 3.3.0),
-	dplyr (>= 0.8.0.1)
+	dplyr (>= 0.8.0.1),
+	httr (>= 1.4.2),
+	stringr (>= 1.4.0),
+	readxl (>= 1.3.1)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

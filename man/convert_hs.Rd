@@ -15,7 +15,7 @@ convert_hs(correspondence_table, hs_from, hs_to, df, map_df = NA)
 
 \item{df}{The original dataframe to convert.}
 
-\item{df_map}{A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings.}
+\item{map_df}{A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings.}
 }
 \value{
 A \code{dataframe} containing the following columns:
