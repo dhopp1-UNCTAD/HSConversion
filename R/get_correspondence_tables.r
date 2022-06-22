@@ -72,6 +72,31 @@ get_correspondence_tables <- function () {
     }
   }
   final_df <- final_df %>% 
-    mutate(first_name = str_replace_all(first_name, "\\.", " "), second_name = str_replace_all(second_name, "\\.", " "))
+    mutate(first_name = str_replace_all(first_name, "\\.", " "), second_name = str_replace_all(second_name, "\\.", " ")) %>% 
+    # making sure names all correspond to one of 1:1, 1:n, n:n, n:1
+    mutate(relationship = str_replace_all(relationship, "'", "")) %>% 
+    mutate(relationship = ifelse(relationship == "1 to 1", "1:1", relationship)) %>% 
+    mutate(relationship = ifelse(relationship == "1 to n", "1:n", relationship)) %>% 
+    mutate(relationship = ifelse(relationship == "n to 1", "n:1", relationship)) %>% 
+    mutate(relationship = ifelse(relationship == "n to n", "n:n", relationship)) %>% 
+    filter(relationship %in% c("1:1", "1:n", "n:n", "n:1"))
+  
+  # have to generate the reverse as well in case want to change to an older HS
+  reverse_final_df <- data.frame(final_df)
+  reverse_final_df[, "first"] <- final_df$second
+  reverse_final_df[, "second"] <- final_df$first 
+  reverse_final_df[, "first_name"] <- final_df$second_name
+  reverse_final_df[, "second_name"] <- final_df$first_name
+  # small function to reverse 1:n
+  reverse <- function (string) {
+    return (paste0(str_split(string, ":")[[1]][2], ":", str_split(string, ":")[[1]][1]))
+  }
+  reverse_final_df <- reverse_final_df %>% 
+    rowwise() %>% 
+    mutate(relationship = reverse(relationship))
+  
+  final_df <- final_df %>% 
+    rbind(reverse_final_df)
+    
   return (final_df)
 }
