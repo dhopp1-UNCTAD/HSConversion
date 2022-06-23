@@ -1,7 +1,7 @@
 #' @import dplyr stringr
 #' @title Convert Comtrade data from one HS year to another
 #' @name convert_hs
-#' @description Convert Comtrade data from one HS year to another
+#' @description Convert Comtrade data from one HS year to another. Will additionally add a "World" aggregate. Note that the function may take some time to run even on small datasets due to the complex logic necessary for n:n transformations.
 #' @param correspondence_table Dataframe with HS mappings, obtained from the \code{get_correspondence_tables} function.
 #' @param hs_from Integer of which HS year the original data is in (e.g., '2017').
 #' @param hs_to Integer of which HS year the data should be converted to (e.g., '2017').
@@ -36,6 +36,7 @@
 
 convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
   options(dplyr.summarise.inform = FALSE)
+  options(scipen = 100)
   
   # if no map df is provided, create a dummy dataframe. NA = length 1, otherwise should be 8 for the 8 columns
   if (length(map_df) == 1) { 
@@ -43,6 +44,10 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
       slice(1) %>% 
       mutate(commodity_code = 999999)
   }
+  
+  # make sure commodity code is a character, since can lead with 0s
+  df$CommodityCode <- as.character(df$CommodityCode)
+  map_df$CommodityCode <- as.character(map_df$CommodityCode)
   
   # column names of raw data from Comtrade/Yoann
   orig_names <- c("Year", "FlowCode", "ReporterCode", "ReporterLabel", "PartnerCode", "PartnerLabel", "CommodityCode", "Value")
@@ -101,8 +106,8 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
     df_complete$reporter_code <- df[1,"reporter_code"] %>% pull
     df_complete$reporter <- df[1,"reporter"] %>% pull
     
-    # initialize all with 0.01 for even distribution if not in old data, will be replaced with actual ratios from new data if available
-    df_complete$value <- 0.01
+    # initialize all with 1e-6 for even distribution if not in old data, will be replaced with actual ratios from new data if available
+    df_complete$value <- 1e-6
     
     # adding partner name from code
     df_complete <- df_complete %>% 
@@ -112,9 +117,9 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
       select(-partner.y) %>% 
       rename(partner=partner.x)
     
-    # replace 0.01's with real data when available
+    # replace 1e-6's with real data when available
     x <- data.table(df_complete)
-    y <- data.table(df)
+    y <- data.table(map_df)
     setkey(x, year, flow_code, reporter_code, reporter, partner_code, partner, commodity_code)
     setkey(y, year, flow_code, reporter_code, reporter, partner_code, partner, commodity_code)
     
@@ -177,7 +182,7 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
             left_join(tmp_old[,c("partner", "flow_code", "value")], by=c("partner", "flow_code")) %>%
             mutate(value=perc*value.y) %>%
             ungroup() %>%
-            filter(!is.na(value), value > 0.001) %>% # also filter out 0.01 rows
+            filter(!is.na(value), value > 1e-5) %>% # also filter out 0.01 rows
             select(year, flow_code, reporter_code, reporter, partner_code, partner, commodity_code, value)
           
           # have to redistribute World values and calculate from constituents, not take from ratios from latest HS data
@@ -205,6 +210,6 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
   
   # exclude any values < 1, this is from the equal distribution step
   final_df <- final_df %>% 
-    filter(value >= 1)
+    filter(value >= 1e-5)
   return (data.frame(final_df))
 }
