@@ -11,6 +11,7 @@
 #' \item{ReporterLabel}{the name of the reporter country}
 #' \item{PartnerCode}{the code of the partner country}
 #' \item{CommodityCode}{the commodity code}
+#' \item{PartnerLabel}{the name of the partner country}
 #' \item{Value}{the value of recorded trade}}
 #' 
 #' @return A \code{dataframe} containing the following same columns as the input dataframe, with \code{Year} set to 999 to denote it is an aggregation, but to make sure output df has the same columns as the input df.

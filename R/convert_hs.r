@@ -5,8 +5,19 @@
 #' @param correspondence_table Dataframe with HS mappings, obtained from the \code{get_correspondence_tables} function.
 #' @param hs_from Integer of which HS year the original data is in (e.g., '2017').
 #' @param hs_to Integer of which HS year the data should be converted to (e.g., '2017').
-#' @param df The original dataframe to convert.
-#' @param map_df A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings.
+#' @param df The original dataframe to convert with columns:
+#' 
+#' \itemize{
+#' \item{Year}{the year of the trade data}
+#' \item{FlowCode}{the HS version of the data}
+#' \item{ReporterCode}{code of the trade flow (export, import, etc.)}
+#' \item{ReporterLabel}{the name of the reporter country}
+#' \item{PartnerCode}{the code of the partner country}
+#' \item{PartnerLabel}{the name of the partner country}
+#' \item{CommodityCode}{the commodity code}
+#' \item{Value}{the value of recorded trade}}
+#' 
+#' @param map_df A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings. Same columns as \code{df} parameter dataframe.
 #' @return A \code{dataframe} containing the following columns:
 #'
 #'\itemize{
@@ -26,8 +37,8 @@
 convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
   options(dplyr.summarise.inform = FALSE)
   
-  # if no map df is provided, create a dummy dataframe
-  if (is.na(map_df)) {
+  # if no map df is provided, create a dummy dataframe. NA = length 1, otherwise should be 8 for the 8 columns
+  if (length(map_df) == 1) { 
     map_df <- df %>% 
       slice(1) %>% 
       mutate(commodity_code = 999999)
@@ -41,7 +52,7 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
   # renaming columns
   map_df <- map_df %>% 
     select(orig_names) %>% 
-    mutate(Year=pull(df[1,"Year"])) %>% # set year to year of old data, as this will be the data joined on later
+    mutate(Year=data.frame(df)[1,"Year"]) %>% # set year to year of old data, as this will be the data joined on later
     filter(nchar(CommodityCode)==6 | CommodityCode=="TOTAL") %>%  # only keep full codes
     mutate(ReporterCode = str_pad(as.character(ReporterCode), 3, side="left", pad="0")) %>% # pad country codes to three digits
     mutate(PartnerCode = str_pad(as.character(PartnerCode), 3, side="left", pad="0"))
@@ -155,7 +166,7 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
           # grouped by partner-flow, get the total value for all related old codes to distribute according to new data distribution
           tmp_old <- tmp_old[, .(value=sum(value)), by=c("year", "flow_code", "reporter_code", "reporter", "partner_code", "partner")]
           # grouped by partner-flow, get total value and proportion by code for all related new codes in the new data
-          tmp_latest <- latest[commodity_code %in% all_related_new_codes,]
+          tmp_latest <- df_complete[commodity_code %in% all_related_new_codes,]
           # totals to get the percent/ratio
           totals <- tmp_latest[, .(total=sum(value)), by=c("year", "flow_code", "reporter_code", "reporter", "partner_code", "partner")]
           tmp_latest <- tmp_latest %>%
@@ -195,5 +206,5 @@ convert_hs <- function (correspondence_table, hs_from, hs_to, df, map_df=NA) {
   # exclude any values < 1, this is from the equal distribution step
   final_df <- final_df %>% 
     filter(value >= 1)
-  return (final_df) 
+  return (data.frame(final_df))
 }
