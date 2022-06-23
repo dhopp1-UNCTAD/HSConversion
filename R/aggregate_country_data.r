@@ -4,7 +4,6 @@
 #' @description Combine all the years of data for a country in a particular HS classification. Purpose is to have a more robust distribution for 1->n conversions for \code{covert_hs} function, \code{map_df} parameter.
 #' @param data Dataframe with data for all years of a country in a given HS classification. Dataframe should be raw output from Comtrade with columns:
 #' 
-#' \itemize{
 #' \item{Year}{the year of the trade data}
 #' \item{FlowCode}{the HS version of the data}
 #' \item{ReporterCode}{code of the trade flow (export, import, etc.)}
@@ -12,7 +11,7 @@
 #' \item{PartnerCode}{the code of the partner country}
 #' \item{CommodityCode}{the commodity code}
 #' \item{PartnerLabel}{the name of the partner country}
-#' \item{Value}{the value of recorded trade}}
+#' \item{Value}{the value of recorded trade}
 #' 
 #' @return A \code{dataframe} containing the following same columns as the input dataframe, with \code{Year} set to 999 to denote it is an aggregation, but to make sure output df has the same columns as the input df.
 #'

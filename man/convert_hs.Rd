@@ -15,7 +15,6 @@ convert_hs(correspondence_table, hs_from, hs_to, df, map_df = NA)
 
 \item{df}{The original dataframe to convert with columns:
 
-\itemize{
 \item{Year}{the year of the trade data}
 \item{FlowCode}{the HS version of the data}
 \item{ReporterCode}{code of the trade flow (export, import, etc.)}
@@ -23,14 +22,13 @@ convert_hs(correspondence_table, hs_from, hs_to, df, map_df = NA)
 \item{PartnerCode}{the code of the partner country}
 \item{PartnerLabel}{the name of the partner country}
 \item{CommodityCode}{the commodity code}
-\item{Value}{the value of recorded trade}}}
+\item{Value}{the value of recorded trade}}
 
 \item{map_df}{A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings. Same columns as \code{df} parameter dataframe.}
 }
 \value{
 A \code{dataframe} containing the following columns:
 
-\itemize{
 \item{hs_version}{the HS version of the data} 
 \item{year}{the year of the trade data}
 \item{flow_code}{code of the trade flow (export, import, etc.)}
@@ -40,7 +38,7 @@ A \code{dataframe} containing the following columns:
 \item{partner_code}{the code of the partner country}
 \item{partner}{the name of the partner country}
 \item{commodity_code}{the commodity code}
-\item{value}{the value of recorded trade}}
+\item{value}{the value of recorded trade}
 }
 \description{
 Convert Comtrade data from one HS year to another. Will additionally add a "World" aggregate. Note that the function may take some time to run even on small datasets due to the complex logic necessary for n:n transformations.

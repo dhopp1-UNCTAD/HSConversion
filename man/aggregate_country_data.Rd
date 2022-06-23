@@ -9,7 +9,6 @@ aggregate_country_data(data)
 \arguments{
 \item{data}{Dataframe with data for all years of a country in a given HS classification. Dataframe should be raw output from Comtrade with columns:
 
-\itemize{
 \item{Year}{the year of the trade data}
 \item{FlowCode}{the HS version of the data}
 \item{ReporterCode}{code of the trade flow (export, import, etc.)}
@@ -17,7 +16,7 @@ aggregate_country_data(data)
 \item{PartnerCode}{the code of the partner country}
 \item{CommodityCode}{the commodity code}
 \item{PartnerLabel}{the name of the partner country}
-\item{Value}{the value of recorded trade}}}
+\item{Value}{the value of recorded trade}}
 }
 \value{
 A \code{dataframe} containing the following same columns as the input dataframe, with \code{Year} set to 999 to denote it is an aggregation, but to make sure output df has the same columns as the input df.

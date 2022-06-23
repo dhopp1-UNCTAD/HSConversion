@@ -7,7 +7,6 @@
 #' @param hs_to Integer of which HS year the data should be converted to (e.g., '2017').
 #' @param df The original dataframe to convert with columns:
 #' 
-#' \itemize{
 #' \item{Year}{the year of the trade data}
 #' \item{FlowCode}{the HS version of the data}
 #' \item{ReporterCode}{code of the trade flow (export, import, etc.)}
@@ -15,12 +14,11 @@
 #' \item{PartnerCode}{the code of the partner country}
 #' \item{PartnerLabel}{the name of the partner country}
 #' \item{CommodityCode}{the commodity code}
-#' \item{Value}{the value of recorded trade}}
+#' \item{Value}{the value of recorded trade}
 #' 
 #' @param map_df A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings. Same columns as \code{df} parameter dataframe.
 #' @return A \code{dataframe} containing the following columns:
 #'
-#'\itemize{
 #' \item{hs_version}{the HS version of the data} 
 #' \item{year}{the year of the trade data}
 #' \item{flow_code}{code of the trade flow (export, import, etc.)}
@@ -30,7 +28,7 @@
 #' \item{partner_code}{the code of the partner country}
 #' \item{partner}{the name of the partner country}
 #' \item{commodity_code}{the commodity code}
-#' \item{value}{the value of recorded trade}}
+#' \item{value}{the value of recorded trade}
 #'
 #' @export
 
