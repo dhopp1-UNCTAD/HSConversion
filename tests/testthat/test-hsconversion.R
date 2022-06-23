@@ -1,5 +1,5 @@
 # correspondence tables
-correspondence_tables <- read_csv("../../data/correspondence_tables.csv")
+#correspondence_tables <- read_csv("../../data/correspondence_tables.csv")
 
 # test cases
 # HS2017  HS2012	
