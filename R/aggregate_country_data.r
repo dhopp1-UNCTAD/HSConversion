@@ -28,3 +28,21 @@ aggregate_country_data <- function (data) {
   
   return (output)
 }
+
+# GTCDIT way
+aggregate_country_data <- function (data) {
+  output <- data %>% 
+    data.table
+  
+  output <- output[, `:=` (
+    CIFValue = sum(CIFValue, na.rm=TRUE), 
+    FOBValue = sum(FOBValue, na.rm=TRUE), 
+    Qty = sum(Qty, na.rm=TRUE)
+  ), 
+  by = list(CommodityCode, Origin, Transit, Mot, QtyUnitCode)] %>% 
+    distinct() %>% 
+    tibble()
+  output[output == FALSE] <- NA
+  
+  return (output)
+}
