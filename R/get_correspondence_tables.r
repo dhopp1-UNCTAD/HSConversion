@@ -107,3 +107,20 @@ get_correspondence_tables <- function () {
   
   return (final_df)
 }
+
+#' @title Convert HS classification names to years
+#' @description Convert HS classification names to years (e.g., "H0" > 1992) or vice versa
+#' @return A number or string
+#' 
+#' \item{hs_name}{the HS name or year}
+
+convert_hs_name <- function (hs_name) {
+  # if character, convert name to year
+  if (typeof(hs_name) == "character") {
+    output <- 1992 + as.numeric(substr(hs_name, 2, 2)) * 5
+  } else {
+    output <- paste0("H", (hs_name - 1992) / 5)
+  }
+  
+  return (output)
+}
