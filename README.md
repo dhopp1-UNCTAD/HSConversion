@@ -13,9 +13,11 @@ The purpose of this library is to enabling the conversion of Comtrade data from 
 
 ## Usage
 The library consists of three main functions. Run `?function_name` to obtain more information on any of them:
+
 - `get_correspondence_tables`: this function obtains the mapping between HS versions fron [UN Stats](https://unstats.un.org/unsd/trade/classifications/correspondence-tables.asp). The output of this function is a dataframe used as an input to the `convert_hs` function, which can be saved to CSV to avoid pinging te UN Stats website unnecessarily.
+- `convert_hs_name`: this function converts HS names (e.g., "HS2", "HS4", etc.) into their corresponding years and vice versa.
 - `aggregate_country_data`: this function is used to produce a more robust mapping dataframe. A single country-year dataframe can be used for the mapping, but aggregating all of a country's data in the destination HS is a more robust method of determining allocations for _n:1_ and _n:n_ mappings. As such, the function takes as input multiple years of Comtrade data in the destination HS and aggregates the data to produce a new mapping dataframe for use in the `convert_hs` function.
-- `convert_hs`: the main function of the library, where actual conversion happens. It takes as input raw Comtrade export data (for a single country-year combination) with the columns:
+- `convert_hs`: the main function of the library, where actual conversion happens. It takes as input raw Comtrade export data (for a single country-year combination) with the columns: 
 	- _Year_
 	- _FlowCode_
 	- _ReporterCode_
