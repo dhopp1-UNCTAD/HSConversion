@@ -5,13 +5,21 @@
 #' @param hs_from Integer of which HS year the original data is in (e.g., '2017').
 #' @param hs_to Integer of which HS year the data should be converted to (e.g., '2017').
 #' @param df The original dataframe to convert with columns
+#' @param agg_columns list of column names to be aggregated/summed up
+#' @param group_columns list of columns to group the aggregation by
+#' @param commodity_column name of column with commodity codes
 #' @param map_df A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings. Same columns as \code{df} parameter dataframe.
 #' @param quiet A boolean of whether or not to print out progress
 #' @return A \code{dataframe} 
 #'
 #' @export
 
-convert_hs <- function (correspondence_tables, hs_from, hs_to, df, commodity_column, map_df = NA, quiet = TRUE) {
+convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, group_columns, commodity_column, map_df = NA, quiet = TRUE) {
+  # keep only necessary columns
+  column_names <- colnames(df)[colnames(df) %in% c(agg_columns, group_columns, commodity_column)]
+  df <- df %>% 
+    select(all_of(column_names))
+  
   # drop rows with commodity values that are not made up of numbers (e.g., "TOTAL")
   df <- tibble(df) %>% 
     mutate(numer_check = as.numeric(!!as.symbol(commodity_column))) %>% 
@@ -23,10 +31,14 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, commodity_col
       mutate(numer_check = as.numeric(!!as.symbol(commodity_column))) %>% 
       filter(!is.na(numer_check)) %>% 
       select(-numer_check)
+    
+    map_df <- map_df %>% 
+      select(all_of(column_names))
   }
   
-  # column names of data
-  column_names <- colnames(df)
+  # getting types of columns
+  col_type_list <- df %>% 
+    summarise_all(class) %>% as.list
   
   # converting dataframes to datatables for faster processing/filtering later on
   map_df <- data.table(map_df)
@@ -37,17 +49,14 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, commodity_col
     final_df <- df
   } else { # else calculate via proportions the old HS data in terms of new HS codes
     # initializing final dataframe
-    final_df <- data.frame(
-      CommodityCode = character(), 
-      Origin = character(),
-      Transit = character(),
-      Mot = integer(),
-      CIFValue = numeric(),
-      FOBValue = numeric(),
-      Qty = numeric(),
-      QtyUnitCode = integer(),
-      QtyKg = numeric()
-    )
+    final_df_string <- ""
+    for (column in keep_columns) {
+      final_df_string <- paste0(final_df_string, str_interp("${column} = ${col_type_list[[column]]}()"))
+      if (column != keep_columns[length(keep_columns)]) {
+        final_df_string <- paste0(final_df_string, ", ")
+      }
+    }
+    final_df <- eval(parse(text = str_interp("data.frame(${final_df_string})")))
     
     # correspondence table for this HS combination
     corr_table <- correspondence_tables %>% 
@@ -57,9 +66,9 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, commodity_col
     done_codes <- c() # initialize list to keep track of codes already handled. This is because some codes, e.g. for 1:n and n:n correspondences, will show up in another codes' sections, so don't want to do them twice.
     
     counter <- 0
-    for (new_code in unique(df$CommodityCode)) {
+    for (new_code in unique(eval(parse(text = str_interp("df$${commodity_column}"))))) {
       if (!quiet) {
-        print(paste0(counter, "/", length(unique(df$CommodityCode)))) 
+        print(paste0(counter, "/", length(unique(eval(parse(text = str_interp("df$${commodity_column}")))))) 
       }
       counter <- counter + 1
       
@@ -102,6 +111,8 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, commodity_col
         # only do calculations and append if there are any of that code in the data
         tmp_old <- df[CommodityCode %in% all_related_old_codes,]
         
+        
+        ### !!! working here
         if (nrow(tmp_old) > 0) {
           # grouped by Origin-Transit-Mot-QtyUnitCode, get the total value for all related old codes to distribute according to new data distribution
           tmp_old <- tmp_old[, .(CIFValue=sum(CIFValue, na.rm=TRUE), FOBValue=sum(FOBValue, na.rm=TRUE), Qty=sum(Qty, na.rm=TRUE), QtyKg=sum(QtyKg, na.rm=TRUE)), by=c("Origin", "Transit", "Mot", "QtyUnitCode")]
