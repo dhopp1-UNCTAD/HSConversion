@@ -1,3 +1,4 @@
+#' @import readxl
 #' @title Get correspondence tables from UN stat
 #' @description Gets all correspondence tables from the UN and generates a CSV with all the mappings
 #' @return A \code{dataframe} containing the following columns, also writes the dataframe to \code{data/full_correspondence_tables.csv}:
@@ -36,7 +37,7 @@ get_correspondence_tables <- function () {
     ) { # skip SITC, BEC, Comtrade conversions, because they're not correspondence tables
       
       tmps <- tempfile()
-      download.file(file, tmps, quiet = T)
+      download.file(file, tmps, quiet = T, mode = "wb")
       sheet_name <- excel_sheets(tmps) %>% .[sapply(tolower(.), function(x) grepl("correlation", x))] # which sheet is the correlation table
       tmp <- read_excel(tmps, sheet=sheet_name, col_names = TRUE) %>% data.frame
       unlink(tmps)
