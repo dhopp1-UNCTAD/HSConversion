@@ -1,6 +1,6 @@
 #' @title Convert Comtrade data from one HS year to another
 #' @name convert_hs
-#' @description Convert Comtrade data from one HS year to another.
+#' @description Convert Comtrade data from one HS year to another.Not that any commodity codes that are not made up exclusively of numbers (e.g., a value like "TOTAL"), will be dropped from the conversion
 #' @param correspondence_tables Dataframe with HS mappings, obtained from the \code{get_correspondence_tables} function.
 #' @param hs_from Integer of which HS year the original data is in (e.g., '2017').
 #' @param hs_to Integer of which HS year the data should be converted to (e.g., '2017').
@@ -11,7 +11,20 @@
 #'
 #' @export
 
-convert_hs <- function (correspondence_tables, hs_from, hs_to, df, map_df=NA, quiet=TRUE) {
+convert_hs <- function (correspondence_tables, hs_from, hs_to, df, commodity_column, map_df = NA, quiet = TRUE) {
+  # drop rows with commodity values that are not made up of numbers (e.g., "TOTAL")
+  df <- tibble(df) %>% 
+    mutate(numer_check = as.numeric(!!as.symbol(commodity_column))) %>% 
+    filter(!is.na(numer_check)) %>% 
+    select(-numer_check)
+  
+  if (!is.na(map_df)[1]) {
+    map_df <- tibble(map_df) %>% 
+      mutate(numer_check = as.numeric(!!as.symbol(commodity_column))) %>% 
+      filter(!is.na(numer_check)) %>% 
+      select(-numer_check)
+  }
+  
   # column names of data
   column_names <- colnames(df)
   

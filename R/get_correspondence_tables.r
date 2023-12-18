@@ -162,6 +162,7 @@ get_correspondence_tables <- function (digit_level = 6) {
   return (final_df)
 }
 
+
 #' @title Convert HS classification names to years
 #' @description Convert HS classification names to years (e.g., "H0" > 1992) or vice versa
 #' @return A number or string
