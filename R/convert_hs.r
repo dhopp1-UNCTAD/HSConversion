@@ -8,17 +8,23 @@
 #' @param agg_columns list of column names to be aggregated/summed up
 #' @param group_columns list of columns to group the aggregation by
 #' @param commodity_column name of column with commodity codes
+#' @param aggregate_order order of aggregation/values columns to use in mapping if one is missing in the mapping dataframe
 #' @param map_df A dataframe of the country in the desired HS year to use for 1->n mappings. If omitted, will use equal distribution for 1-n mappings. Same columns as \code{df} parameter dataframe.
 #' @param quiet A boolean of whether or not to print out progress
 #' @return A \code{dataframe} 
 #'
 #' @export
 
-convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, group_columns, commodity_column, map_df = NA, quiet = TRUE) {
+convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, group_columns, commodity_column, aggregate_order = NA, map_df = NA, quiet = TRUE) {
   # keep only necessary columns
   column_names <- colnames(df)[colnames(df) %in% c(agg_columns, group_columns, commodity_column)]
   df <- df %>% 
     select(all_of(column_names))
+  
+  # creating a default aggregate_order
+  if (is.na(aggregate_order[1])) {
+    aggregate_order <- agg_columns
+  }
   
   # drop rows with commodity values that are not made up of numbers (e.g., "TOTAL")
   df <- tibble(df) %>% 
@@ -125,7 +131,6 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           }
           tmp_old_perc <- eval(parse(text = code_string))
         
-          ### !!! working here  
           # mapping commodity code distribution
           # only use the mapping dataframe if 1) exists 2) n:n or 1:n 3) mapping data exists for those codes
           use_map <- FALSE
@@ -134,7 +139,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
             (length(all_related_new_codes) > 1)
           ) {
             if ((map_df %>% 
-                 filter(CommodityCode %in% all_related_new_codes) %>% nrow) > 0) {
+                 filter(!!as.symbol(commodity_column) %in% all_related_new_codes) %>% nrow) > 0) {
               use_map <- TRUE
             }
           }
@@ -143,69 +148,32 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           if (length(all_related_new_codes) == 0) {
             all_related_new_codes <- "999999"
           }
-          
+        
           if (use_map) {
-            tmp_map <- map_df %>% 
-              filter(CommodityCode %in% all_related_new_codes) %>% 
-              group_by(CommodityCode) %>% 
-              summarise(
-                CIFValue = sum(CIFValue, na.rm=TRUE),
-                FOBValue = sum(FOBValue, na.rm=TRUE),
-                Qty = sum(Qty, na.rm=TRUE),
-                QtyKg = sum(QtyKg, na.rm=TRUE)
-              )
-            # if missing a quantity, put same distribution as CIF, FOB, or equal distribution
-            if (sum(tmp_map$Qty, na.rm=TRUE) == 0) {
-              if (sum(tmp_map$CIFValue, na.rm=TRUE) != 0) { # use CIFValue if there
-                tmp_map$Qty <- tmp_map$CIFValue 
-              } else if (sum(tmp_map$FOBValue, na.rm=TRUE) != 0) { # if not CIF, use FOBValue if there
-                tmp_map$Qty <- tmp_map$FOBValue
-              } else { # if neither, use 1 for equal distribution
-                tmp_map$Qty <- 1
-              }
-            }
-            # if missing a CIF, put same distribution as FOB, Qty, or equal distribution
-            if (sum(tmp_map$CIFValue, na.rm=TRUE) == 0) {
-              if (sum(tmp_map$FOBValue, na.rm=TRUE) != 0) { # use FOBValue if there
-                tmp_map$CIFValue <- tmp_map$FOBValue 
-              } else if (sum(tmp_map$Qty, na.rm=TRUE) != 0) { # if not FOB, use Qty if there
-                tmp_map$CIFValue <- tmp_map$Qty
-              } else { # if neither, use 1 for equal distribution
-                tmp_map$CIFValue <- 1
-              }
-            }
-            # if missing a FOB, put same distribution as CIF
-            if (sum(tmp_map$FOBValue, na.rm=TRUE) == 0) {
-              if (sum(tmp_map$CIFValue, na.rm=TRUE) != 0) { # use CIFValue if there
-                tmp_map$FOBValue <- tmp_map$CIFValue 
-              } else if (sum(tmp_map$Qty, na.rm=TRUE) != 0) { # if not CIF, use Qty if there
-                tmp_map$FOBValue <- tmp_map$Qty
-              } else { # if neither, use 1 for equal distribution
-                tmp_map$FOBValue <- 1
-              }
-            }
-            # if missing a QtyKg, put same distribution as Qty
-            if (sum(tmp_map$QtyKg, na.rm=TRUE) == 0) {
-              if (sum(tmp_map$Qty, na.rm=TRUE) != 0) { # use Qty if there
-                tmp_map$QtyKg <- tmp_map$Qty 
-              } else if (sum(tmp_map$CIFValue, na.rm=TRUE) != 0) { # use CIFValue if there
-                tmp_map$QtyKg <- tmp_map$CIFValue 
-              } else if (sum(tmp_map$FOBValue, na.rm=TRUE) != 0) { # if not CIFValue, use FOBValue if there
-                tmp_map$QtyKg <- tmp_map$FOBValue
-              } else { # if neither, use 1 for equal distribution
-                tmp_map$QtyKg <- 1
+            code_string <- str_interp("map_df %>% filter(!!as.symbol(commodity_column) %in% all_related_new_codes) %>% group_by(!!as.symbol(commodity_column)) %>% summarise(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})")
+            tmp_map <- eval(parse(text = code_string))
+            
+            # if missing a quantity put same distribution as another aggregate column, in order as specified
+            for (agg_column in agg_columns) {
+              if (eval(parse(text = str_interp("sum(tmp_map$${agg_column}, na.rm = TRUE) == 0")))) {
+                for (agg_column2 in aggregate_order) {
+                  if (agg_column2 != agg_column) {
+                    if (eval(parse(text = str_interp("sum(tmp_map$${agg_column2}, na.rm = TRUE) != 0")))) {
+                      eval(parse(text = str_interp("tmp_map$${agg_column} <- tmp_map$${agg_column2}")))
+                      break
+                    }
+                  }
+                }
+              } else if (eval(parse(text = str_interp("sum(tmp_map$${agg_column}, na.rm = TRUE) == 0")))) { # if no other quantities have a value, put 1 for equal distribution
+                eval(parse(text = str_interp("tmp_map$${agg_column} <- 1")))
               }
             }
           } else { # dummy equal distribution if no map_df provided
-            tmp_map <- data.table(
-              CommodityCode = all_related_new_codes,
-              CIFValue = 1,
-              FOBValue = 1,
-              Qty = 1,
-              QtyKg = 1
-            )
+            code_string <- str_interp("data.table(${commodity_column} = ${all_related_new_codes}, ${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = 1')))), collapse = ', ')})")
+            tmp_map <- eval(parse(text = code_string))
           }
           
+          ### !!! working here
           # converting commodity code map into percentages
           tmp_map_perc <- tmp_map %>% 
             mutate(
