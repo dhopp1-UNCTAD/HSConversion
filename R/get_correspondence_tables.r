@@ -1,6 +1,7 @@
 #' @import readxl
 #' @title Get correspondence tables from UN stat
 #' @description Gets all correspondence tables from the UN and generates a CSV with all the mappings
+#' @param digit_level number of digits to create the correspondence table for, e.g., '6' for 6-digit, etc. 
 #' @return A \code{dataframe} containing the following columns, also writes the dataframe to \code{data/full_correspondence_tables.csv}:
 #' 
 #' \item{first}{the 'to' product code}
@@ -9,7 +10,7 @@
 #' \item{second_name}{the hs version of the 'from' product code}
 #' \item{relationship}{the correspondence type of this product pair, e.g. 1:n, n:n, etc.}
 
-get_correspondence_tables <- function () {
+get_correspondence_tables <- function (digit_level = 6) {
   # getting correspondence file urls
   correspondence_url <- "https://unstats.un.org/unsd/classifications/Econ"
   files_prefix <- "https://unstats.un.org"
@@ -89,7 +90,59 @@ get_correspondence_tables <- function () {
     mutate(first = ifelse(!relationship %in% c("n:1", "n:n", "1:1", "1:n"), "999999", first)) %>% # if NA product, put 999999
     mutate(second = ifelse(!relationship %in% c("n:1", "n:n", "1:1", "1:n"), "999999", second)) %>% 
     mutate(relationship = ifelse(!relationship %in% c("n:1", "n:n", "1:1", "1:n"), "1:1", relationship)) %>% 
-    distinct()
+    distinct() %>% 
+    tibble()
+  
+  # getting final digit level, if 6 just take that from the UN
+  if (digit_level != 6) {
+    # aggregate to desired digit level
+    final_df <- final_df %>% 
+      mutate(first = substr(first, 1, digit_level), second = substr(second, 1, digit_level)) %>% 
+      distinct(first, second, first_name, second_name)
+    
+    # function to check relationship of a given row
+    check_relation <- function (first, first_name, second_name) {
+      seconds <- final_df %>% 
+        filter(first == !!first, first_name == !!first_name, second_name == !!second_name) %>% 
+        select(second) %>% 
+        pull() %>% 
+        unique()
+      firsts <- final_df %>% 
+        filter(second %in% seconds, first_name == !!first_name, second_name == !!second_name) %>% 
+        select(first) %>% 
+        pull() %>% 
+        unique()
+      
+      # 1:1
+      if (length(firsts) == 1 & length(seconds) == 1) {
+        relationship <- ("1:1")
+      } else if (length(firsts) == 1 & length(seconds) > 1) { # 1:n
+        relationship <- ("1:n")
+      } else if (length(firsts) > 1 & length(seconds) == 1) { # n:1
+        relationship <- ("n:1")
+      } else if (length(firsts) > 1 & length(seconds) > 1) { # n:n
+        relationship <- ("n:n")
+      } else {
+        relationship <- NA
+      }
+      
+      return (list(firsts = firsts, seconds = seconds, relationship = relationship))
+    }
+    
+    # set all reltionships to NA
+    final_df[, "relationship"] <- NA
+    
+    # cycle through rows
+    for (i in 1:nrow(final_df)) {
+      print(str_interp("getting ${digit_level}-digit relationships: ${i}/${nrow(final_df)}"))
+      
+      # only run the row if it wasn't covered by a previous run
+      if (is.na(pull(final_df[i, "relationship"]))) {
+        results <- check_relation(pull(final_df[i, "first"]), pull(final_df[i, "first_name"]), pull(final_df[i, "second_name"]))
+        final_df[final_df$first %in% results$firsts & final_df$second %in% results$seconds & final_df$first_name == pull(final_df[i, "first_name"]) & final_df$second_name == pull(final_df[i, "second_name"]), "relationship"] <- results$relationship
+      }
+    }
+  }
   
   # add reverse correspondences for converting newer HS's into older ones
   reversed_df <- final_df %>% 
