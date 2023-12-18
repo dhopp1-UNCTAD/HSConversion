@@ -111,21 +111,21 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
         # only do calculations and append if there are any of that code in the data
         tmp_old <- df[CommodityCode %in% all_related_old_codes,]
         
-        
-        ### !!! working here
         if (nrow(tmp_old) > 0) {
-          # grouped by Origin-Transit-Mot-QtyUnitCode, get the total value for all related old codes to distribute according to new data distribution
-          tmp_old <- tmp_old[, .(CIFValue=sum(CIFValue, na.rm=TRUE), FOBValue=sum(FOBValue, na.rm=TRUE), Qty=sum(Qty, na.rm=TRUE), QtyKg=sum(QtyKg, na.rm=TRUE)), by=c("Origin", "Transit", "Mot", "QtyUnitCode")]
+          tmp_old_string <- str_interp("tmp_old[, .(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = sum(', x, ', na.rm=TRUE)')))), collapse = ', ')}), by = list(${paste0(group_columns, collapse = ',')})]")
+          tmp_old <- eval(parse(text = tmp_old_string))
           
-          # putting tmp_old (all related products, collapsing the commodity code column) in terms of %
-          tmp_old_perc <- tmp_old %>%
-            mutate(
-              CIFValue = CIFValue / sum(CIFValue, na.rm=TRUE),
-              FOBValue = FOBValue / sum(FOBValue, na.rm=TRUE),
-              Qty = Qty / sum(Qty, na.rm=TRUE),
-              QtyKg = QtyKg / sum(QtyKg, na.rm=TRUE)
-            )
-          
+          # putting tmp_old (all related products, collapsing the commodity code column) in terms of % of that group
+          code_string <- "tmp_old %>% "
+          for (agg_column in agg_columns) {
+            code_string <- paste0(code_string, str_interp("mutate(${agg_column} = ${agg_column} / sum(${agg_column}, na.rm = TRUE))"))
+            if (agg_column != agg_columns[length(agg_columns)]) {
+              code_string <- paste0(code_string, " %>% ")
+            }
+          }
+          tmp_old_perc <- eval(parse(text = code_string))
+        
+          ### !!! working here  
           # mapping commodity code distribution
           # only use the mapping dataframe if 1) exists 2) n:n or 1:n 3) mapping data exists for those codes
           use_map <- FALSE
