@@ -177,27 +177,22 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           code_string <- str_interp("tmp_map %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, ' / sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})")
           tmp_map_perc <- eval(parse(text = code_string))
           
-          ### !!! working here
           # distributing percentages to create final harmonized data
+          by_condition <- c("by", commodity_column)
+          names(by_condition) <- c("by", commodity_column)
+          
           tmp_final_df <- tmp_old_perc %>% 
             mutate(by=1) %>% 
-            full_join(tmp_map_perc %>% mutate(by=1), by="by") %>% 
-            select(-by) %>% 
-            mutate(
-              CIFValue = CIFValue.x * CIFValue.y,
-              FOBValue = FOBValue.x * FOBValue.y,
-              Qty = Qty.x * Qty.y,
-              QtyKg = QtyKg.x * QtyKg.y
-            ) %>% 
+            full_join(tmp_map_perc %>% mutate(by=1), by = by_condition) %>% 
+            select(-by)
+          
+          code_string <- str_interp("tmp_final_df %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, '.x * ', x, '.y')))), collapse = ', ')})")
+          tmp_final_df <- eval(parse(text = code_string))
+          tmp_final_df <- tmp_final_df %>% 
             select(column_names)
           
-          tmp_final_df <- tmp_final_df %>% 
-            mutate(
-              CIFValue = CIFValue * sum(tmp_old$CIFValue, na.rm=TRUE),
-              FOBValue = FOBValue * sum(tmp_old$FOBValue, na.rm=TRUE),
-              Qty = Qty * sum(tmp_old$Qty, na.rm=TRUE),
-              QtyKg = QtyKg * sum(tmp_old$QtyKg, na.rm=TRUE)
-            )
+          code_string <- code_string <- str_interp("tmp_final_df %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, ' * sum(tmp_old$', x, ', na.rm=TRUE)')))), collapse = ', ')})")
+          tmp_final_df <- eval(parse(text = code_string))
           
           final_df <- rbind(final_df, tmp_final_df)
         } 
