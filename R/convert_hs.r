@@ -173,16 +173,11 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
             tmp_map <- eval(parse(text = code_string))
           }
           
-          ### !!! working here
           # converting commodity code map into percentages
-          tmp_map_perc <- tmp_map %>% 
-            mutate(
-              CIFValue = CIFValue / sum(CIFValue, na.rm=TRUE),
-              FOBValue = FOBValue / sum(FOBValue, na.rm=TRUE),
-              Qty = Qty / sum(Qty, na.rm=TRUE),
-              QtyKg = QtyKg / sum(QtyKg, na.rm=TRUE)
-            )
+          code_string <- str_interp("tmp_map %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, ' / sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})")
+          tmp_map_perc <- eval(parse(text = code_string))
           
+          ### !!! working here
           # distributing percentages to create final harmonized data
           tmp_final_df <- tmp_old_perc %>% 
             mutate(by=1) %>% 
