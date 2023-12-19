@@ -36,7 +36,7 @@ hs12_to_convert <- data.frame(
   Value = c(100, 20, 5, 7, 50, 10, 50)
 )
 
-country_aggregation <- aggregate_country_data(hs17_map)
+country_aggregation <- aggregate_country_data(hs17_map, agg_columns = , group_columns = )
 hs17_conversion <- convert_hs(correspondence_table = correspondence_tables, hs_from = 2012, hs_to = 2017, df = hs12_to_convert, map_df = country_aggregation)
 hs17_conversion_no_map <- convert_hs(correspondence_table = correspondence_tables, hs_from = 2012, hs_to = 2017, df = hs12_to_convert)
 
