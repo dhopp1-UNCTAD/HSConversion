@@ -238,5 +238,5 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
       }
     }
   }
-  return (final_df)
+  return (final_df %>% ungroup())
 }
