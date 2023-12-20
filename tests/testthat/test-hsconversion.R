@@ -63,8 +63,7 @@ hs17_conversion <- convert_hs(
   group_columns = group_columns,
   commodity_column = commodity_column,
   aggregate_order = c("Value", "CIF", "Qty"),
-  map_df = forward_country_aggregation,
-  quiet = TRUE
+  map_df = forward_country_aggregation
 )
 
 hs17_conversion_no_map <- convert_hs(

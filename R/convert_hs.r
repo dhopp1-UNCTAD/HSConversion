@@ -177,7 +177,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           
           # if no all related new codes (i.e. probably 999999 1:1 correspondence not in the correspondence table), set to 99999
           if (length(all_related_new_codes) == 0) {
-            all_related_new_codes <- "999999"
+            all_related_new_codes <- paste0(replicate(digit_level, "9"), collapse = "")
           }
           
           if (use_map) {
@@ -213,12 +213,10 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           tmp_map_perc <- eval(parse(text = code_string))
           
           # distributing percentages to create final harmonized data
-          by_condition <- c("by", commodity_column)
-          names(by_condition) <- c("by", commodity_column)
-          
           tmp_final_df <- tmp_old_perc %>% 
+            select(-!!as.symbol(commodity_column)) %>% 
             mutate(by=1) %>% 
-            full_join(tmp_map_perc %>% mutate(by=1), by = by_condition) %>% 
+            full_join(tmp_map_perc %>% mutate(by=1), by = "by") %>% 
             select(-by)
           
           code_string <- str_interp("tmp_final_df %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, '.x * ', x, '.y')))), collapse = ', ')})")
