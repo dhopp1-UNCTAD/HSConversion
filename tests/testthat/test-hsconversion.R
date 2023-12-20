@@ -63,7 +63,8 @@ hs17_conversion <- convert_hs(
   group_columns = group_columns,
   commodity_column = commodity_column,
   aggregate_order = c("Value", "CIF", "Qty"),
-  map_df = forward_country_aggregation
+  map_df = forward_country_aggregation,
+  quiet = TRUE
 )
 
 hs17_conversion_no_map <- convert_hs(
@@ -109,12 +110,13 @@ hs12_conversion_no_map <- convert_hs(
 
 ### 4-digit conversions
 hs12_4 <- aggregate_digit_level(df = hs12_to_convert, agg_columns = agg_columns, group_columns = group_columns, commodity_column = commodity_column, digit_level = 4)
-country_aggregation_4 <- aggregate_country_data(hs12_4, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
+hs17_map_4 <- aggregate_digit_level(df = hs17_map, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"], commodity_column = commodity_column, digit_level = 4)
+country_aggregation_4 <- aggregate_country_data(hs17_map_4, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
 hs12_conversion_4 <- convert_hs(
   correspondence_tables = correspondence_tables_4,
   hs_from = 2012,
   hs_to = 2017,
-  df = hs17_map,
+  df = hs12_4,
   agg_columns = agg_columns,
   group_columns = group_columns,
   commodity_column = commodity_column,
@@ -124,20 +126,21 @@ hs12_conversion_4 <- convert_hs(
 )
 
 ### 2-digit conversions
-hs12_2 <- aggregate_digit_level(df = hs12_to_convert, agg_columns = agg_columns, group_columns = group_columns, commodity_column = commodity_column, digit_level = 2)
-country_aggregation_2 <- aggregate_country_data(hs12_4, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
-hs12_conversion_4 <- convert_hs(
-  correspondence_tables = correspondence_tables_2,
-  hs_from = 2012,
-  hs_to = 2017,
-  df = hs17_map,
-  agg_columns = agg_columns,
-  group_columns = group_columns,
-  commodity_column = commodity_column,
-  aggregate_order = c("Value", "CIF", "Qty"),
-  map_df = country_aggregation_2,
-  quiet = TRUE
-)
+  hs12_2 <- aggregate_digit_level(df = hs12_to_convert, agg_columns = agg_columns, group_columns = group_columns, commodity_column = commodity_column, digit_level = 2)
+  hs17_map_2 <- aggregate_digit_level(df = hs17_map, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"], commodity_column = commodity_column, digit_level = 2)
+  country_aggregation_2 <- aggregate_country_data(hs17_map_2, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
+  hs12_conversion_2 <- convert_hs(
+    correspondence_tables = correspondence_tables_2,
+    hs_from = 2012,
+    hs_to = 2017,
+    df = hs12_2,
+    agg_columns = agg_columns,
+    group_columns = group_columns,
+    commodity_column = commodity_column,
+    aggregate_order = c("Value", "CIF", "Qty"),
+    map_df = country_aggregation_2,
+    quiet = TRUE
+  )
 
 if (FALSE) {
   # testing reverse, from HS17 to HS12

@@ -1,3 +1,5 @@
+options(dplyr.summarise.inform = FALSE)
+
 #' @import data.table dplyr stringr
 #' @title Convert Comtrade data from one HS year to another
 #' @name convert_hs
@@ -181,7 +183,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           }
           
           if (use_map) {
-            code_string <- str_interp("map_df %>% filter(!!as.symbol(commodity_column) %in% all_related_new_codes) %>% group_by(!!as.symbol(commodity_column)) %>% summarise(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})")
+            code_string <- str_interp("map_df %>% filter(!!as.symbol(commodity_column) %in% all_related_new_codes) %>% group_by(${commodity_column}) %>% summarise(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})")
             tmp_map <- eval(parse(text = code_string))
             
             # if missing a quantity put same distribution as another aggregate column, in order as specified
@@ -213,8 +215,12 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           tmp_map_perc <- eval(parse(text = code_string))
           
           # distributing percentages to create final harmonized data
+          # group old perc by everything but commodity code
+          code_string <- str_interp("tmp_old_perc %>% group_by(${paste0(group_columns[group_columns != commodity_column], collapse = ', ')})")
+          code_string <- paste0(code_string, str_interp(" %>% summarise(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', 'sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})"))
+          tmp_old_perc <- eval(parse(text = code_string))
+          
           tmp_final_df <- tmp_old_perc %>% 
-            select(-!!as.symbol(commodity_column)) %>% 
             mutate(by=1) %>% 
             full_join(tmp_map_perc %>% mutate(by=1), by = "by") %>% 
             select(-by)
