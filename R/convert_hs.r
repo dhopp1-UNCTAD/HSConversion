@@ -25,6 +25,10 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
   
   digit_level <- eval(parse(text = str_interp("nchar(df$${commodity_column})"))) %>% 
     max()
+  
+  # left pad commodity codes for leading 0s
+  df <- df %>% 
+    mutate(!!as.symbol(commodity_column) := str_pad(!!as.symbol(commodity_column), digit_level, "left", "0"))
     
   # creating a default aggregate_order
   if (is.na(aggregate_order[1])) {
@@ -64,7 +68,9 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
     }
     
     map_df <- map_df %>% 
-      select(all_of(column_names))
+      select(all_of(column_names)) %>% 
+      mutate(!!as.symbol(commodity_column) := as.character(!!as.symbol(commodity_column))) %>% # ensure commodity column is a character
+      mutate(!!as.symbol(commodity_column) := str_pad(!!as.symbol(commodity_column), digit_level, "left", "0"))
   }
   
   # getting types of columns
