@@ -1,6 +1,7 @@
 library(dplyr)
 library(readr)
 #source("../../R/aggregate.r")
+#library(data.table)
 
 # correspondence tables
 correspondence_tables_6 <- read_csv("../correspondence_tables_6.csv", show_col_types = FALSE)
@@ -48,7 +49,7 @@ hs12_to_convert <- data.frame(
 
 agg_columns <- c("Value", "CIF", "Qty")
 group_columns <- c("Year", "FlowCode", "ReporterCode", "ReporterLabel", "PartnerCode", "PartnerLabel", "CommodityCode")
-commodity_col <- "CommodityCode"
+commodity_column <- "CommodityCode"
 
 ### 6-digit conversions
 # forward conversions

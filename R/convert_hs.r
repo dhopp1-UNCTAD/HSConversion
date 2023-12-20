@@ -20,8 +20,12 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
   # keep only necessary columns
   column_names <- colnames(df)[colnames(df) %in% c(agg_columns, group_columns, commodity_column)]
   df <- df %>% 
-    select(all_of(column_names))
+    select(all_of(column_names)) %>% 
+    mutate(!!as.symbol(commodity_column) := as.character(!!as.symbol(commodity_column))) # ensure commodity column is a character
   
+  digit_level <- eval(parse(text = str_interp("nchar(df$${commodity_column})"))) %>% 
+    max()
+    
   # creating a default aggregate_order
   if (is.na(aggregate_order[1])) {
     aggregate_order <- agg_columns
@@ -38,6 +42,26 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
       mutate(numer_check = as.numeric(!!as.symbol(commodity_column))) %>% 
       filter(!is.na(numer_check)) %>% 
       select(-numer_check)
+    
+    # check if map df has same group columns as df, if not (likely because of a 'year' column), duplicate the map_df for each of the missing values in the column
+    missing_columns <- group_columns[!group_columns %in% colnames(map_df)]
+    if (length(missing_columns) > 0) {
+      counter <- 1
+      for (missing_column in missing_columns) {
+        for (missing_value in pull(distinct(df[,missing_column]))) {
+          tmp_map_df <- tibble(map_df)
+          tmp_map_df[, missing_column] <- missing_value
+          if (counter == 1) {
+            final_map_df <- tmp_map_df
+          } else {
+            final_map_df <- final_map_df %>% 
+              rbind(tmp_map_df)
+          }
+          counter <- counter + 1
+        }
+      }
+      map_df <- final_map_df
+    }
     
     map_df <- map_df %>% 
       select(all_of(column_names))
@@ -57,9 +81,9 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
   } else { # else calculate via proportions the old HS data in terms of new HS codes
     # initializing final dataframe
     final_df_string <- ""
-    for (column in keep_columns) {
+    for (column in column_names) {
       final_df_string <- paste0(final_df_string, str_interp("${column} = ${col_type_list[[column]]}()"))
-      if (column != keep_columns[length(keep_columns)]) {
+      if (column != column_names[length(column_names)]) {
         final_df_string <- paste0(final_df_string, ", ")
       }
     }
