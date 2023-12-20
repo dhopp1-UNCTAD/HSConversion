@@ -2,3 +2,4 @@
 R/.Rhistory
 .Rhistory
 data/*
+tests/*.csv

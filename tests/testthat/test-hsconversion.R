@@ -1,5 +1,12 @@
+library(dplyr)
+library(readr)
+#source("../../R/aggregate.r")
+#library(data.table)
+
 # correspondence tables
-#correspondence_tables <- read_csv("../../data/correspondence_tables.csv")
+correspondence_tables_6 <- read_csv("../correspondence_tables_6.csv", show_col_types = FALSE)
+correspondence_tables_4 <- read_csv("../correspondence_tables_4.csv", show_col_types = FALSE)
+correspondence_tables_2 <- read_csv("../correspondence_tables_2.csv", show_col_types = FALSE)
 
 # test cases
 # HS2017  HS2012	
@@ -22,7 +29,9 @@ hs17_map <- data.frame(
   PartnerCode = rep("608", 7),
   PartnerLabel = rep("Philippines", 7),
   CommodityCode = c("100890", "540253", "540259", "540253", "540259", "847340", "854231"),
-  Value = c(100, 10, 15, 1, 19, 40, 60)
+  Value = c(100, 10, 15, 1, 19, 40, 60),
+  CIF = c(101, 11, 16, 2, 21, 42, 66),
+  Qty = c(NA, NA, NA, NA, NA, NA, NA)
 )
 
 hs12_to_convert <- data.frame(
@@ -33,92 +42,188 @@ hs12_to_convert <- data.frame(
   PartnerCode = rep("608", 7),
   PartnerLabel = rep("Philippines", 7),
   CommodityCode = c("100890", "540259", "370510", "370590", "852869", "847310", "847340"),
-  Value = c(100, 20, 5, 7, 50, 10, 50)
+  Value = c(100, 20, 5, 7, 50, 10, 50),
+  CIF = c(101, 21, 6, 9, 52, 13, 55),
+  Qty = c(1, 2, 4, 5, 1, 9, 10)
 )
 
-country_aggregation <- aggregate_country_data(hs17_map)
-hs17_conversion <- convert_hs(correspondence_table = correspondence_tables, hs_from = 2012, hs_to = 2017, df = hs12_to_convert, map_df = country_aggregation)
-hs17_conversion_no_map <- convert_hs(correspondence_table = correspondence_tables, hs_from = 2012, hs_to = 2017, df = hs12_to_convert)
+agg_columns <- c("Value", "CIF", "Qty")
+group_columns <- c("Year", "FlowCode", "ReporterCode", "ReporterLabel", "PartnerCode", "PartnerLabel", "CommodityCode")
+commodity_column <- "CommodityCode"
 
-# testing reverse, from HS17 to HS12
-hs12_conversion <- convert_hs(correspondence_table = correspondence_tables, hs_from = 2017, hs_to = 2012, df = (hs17_map %>% filter(Year == 2017)), map_df = hs12_to_convert)
+### 6-digit conversions
+# forward conversions
+forward_country_aggregation <- aggregate_country_data(hs17_map, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
+hs17_conversion <- convert_hs(
+  correspondence_tables = correspondence_tables_6,
+  hs_from = 2012,
+  hs_to = 2017,
+  df = hs12_to_convert,
+  agg_columns = agg_columns,
+  group_columns = group_columns,
+  commodity_column = commodity_column,
+  aggregate_order = c("Value", "CIF", "Qty"),
+  map_df = forward_country_aggregation,
+  quiet = TRUE
+)
 
-# country aggregation test
-test_that("Country aggregation for mapping", {
-  expect_equal(
-    country_aggregation[country_aggregation$CommodityCode == "540253", "Value"],
-    11
+hs17_conversion_no_map <- convert_hs(
+  correspondence_tables = correspondence_tables_6,
+  hs_from = 2012,
+  hs_to = 2017,
+  df = hs12_to_convert,
+  agg_columns = agg_columns,
+  group_columns = group_columns,
+  commodity_column = commodity_column,
+  aggregate_order = c("Value", "CIF", "Qty"),
+  map_df = NA,
+  quiet = TRUE
+)
+
+# backward conversions
+backward_country_aggregation <- aggregate_country_data(hs12_to_convert, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
+hs12_conversion <- convert_hs(
+  correspondence_tables = correspondence_tables_6,
+  hs_from = 2017,
+  hs_to = 2012,
+  df = hs17_map,
+  agg_columns = agg_columns,
+  group_columns = group_columns,
+  commodity_column = commodity_column,
+  aggregate_order = c("Value", "CIF", "Qty"),
+  map_df = backward_country_aggregation,
+  quiet = TRUE
+)
+
+hs12_conversion_no_map <- convert_hs(
+  correspondence_tables = correspondence_tables_6,
+  hs_from = 2017,
+  hs_to = 2012,
+  df = hs17_map,
+  agg_columns = agg_columns,
+  group_columns = group_columns,
+  commodity_column = commodity_column,
+  aggregate_order = c("Value", "CIF", "Qty"),
+  map_df = NA,
+  quiet = TRUE
+)
+
+### 4-digit conversions
+hs12_4 <- aggregate_digit_level(df = hs12_to_convert, agg_columns = agg_columns, group_columns = group_columns, commodity_column = commodity_column, digit_level = 4)
+hs17_map_4 <- aggregate_digit_level(df = hs17_map, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"], commodity_column = commodity_column, digit_level = 4)
+country_aggregation_4 <- aggregate_country_data(hs17_map_4, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
+hs12_conversion_4 <- convert_hs(
+  correspondence_tables = correspondence_tables_4,
+  hs_from = 2012,
+  hs_to = 2017,
+  df = hs12_4,
+  agg_columns = agg_columns,
+  group_columns = group_columns,
+  commodity_column = commodity_column,
+  aggregate_order = c("Value", "CIF", "Qty"),
+  map_df = country_aggregation_4,
+  quiet = TRUE
+)
+
+### 2-digit conversions
+  hs12_2 <- aggregate_digit_level(df = hs12_to_convert, agg_columns = agg_columns, group_columns = group_columns, commodity_column = commodity_column, digit_level = 2)
+  hs17_map_2 <- aggregate_digit_level(df = hs17_map, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"], commodity_column = commodity_column, digit_level = 2)
+  country_aggregation_2 <- aggregate_country_data(hs17_map_2, agg_columns = agg_columns, group_columns = group_columns[group_columns != "Year"])
+  hs12_conversion_2 <- convert_hs(
+    correspondence_tables = correspondence_tables_2,
+    hs_from = 2012,
+    hs_to = 2017,
+    df = hs12_2,
+    agg_columns = agg_columns,
+    group_columns = group_columns,
+    commodity_column = commodity_column,
+    aggregate_order = c("Value", "CIF", "Qty"),
+    map_df = country_aggregation_2,
+    quiet = TRUE
   )
-})
-
+  
+### 6-digit tests
 # HS 2012 to HS 2017 tests
-test_that("HS 2012 -> HS 2017 1:1 test", {
+test_that("6-digit HS 2012 -> HS 2017 1:1 test", {
   expect_equal(
-    hs17_conversion[(hs17_conversion$commodity_code == "100890") & (hs17_conversion$partner == "Philippines"), "value"],
+    hs17_conversion[(hs17_conversion$CommodityCode == "100890") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"] %>% pull(),
     100
   )
 })
 
-test_that("HS 2012 -> HS 2017 1:n test", {
+test_that("6-digit HS 2012 -> HS 2017 1:n test", {
   expect_equal(
-    hs17_conversion[(hs17_conversion$commodity_code == "370500") & (hs17_conversion$partner == "Philippines"), "value"],
+    hs17_conversion[(hs17_conversion$CommodityCode == "370500") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"] %>% pull(),
     12
   )
 })
 
-test_that("HS 2012 -> HS 2017 n:1 test 1", {
+test_that("6-digit HS 2012 -> HS 2017 n:1 test 1", {
   expect_equal(
-    round(hs17_conversion[(hs17_conversion$commodity_code == "540253") & (hs17_conversion$partner == "Philippines"), "value"], 0),
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "540253") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
     5
   )
 })
 
-test_that("HS 2012 -> HS 2017 n:1 test 2", {
+test_that("6-digit HS 2012 -> HS 2017 n:1 test 2", {
   expect_equal(
-    round(hs17_conversion[(hs17_conversion$commodity_code == "540259") & (hs17_conversion$partner == "Philippines"), "value"], 0),
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "540259") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
     15
   )
 })
 
-test_that("HS 2012 -> HS 2017 n:n test 1", {
+test_that("6-digit HS 2012 -> HS 2017 n:n test 1", {
   expect_equal(
-    round(hs17_conversion[(hs17_conversion$commodity_code == "847340") & (hs17_conversion$partner == "Philippines"), "value"], 0),
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "847340") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
     24
   )
 })
 
-test_that("HS 2012 -> HS 2017 n:n test 2", {
+test_that("6-digit HS 2012 -> HS 2017 n:n test 2", {
   expect_equal(
-    round(hs17_conversion[(hs17_conversion$commodity_code == "854231") & (hs17_conversion$partner == "Philippines"), "value"], 0),
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "854231") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
     36
   )
 })
 
-test_that("HS 2012 -> HS 2017 no map_df", {
+test_that("6-digit HS 2012 -> HS 2017 no map_df", {
   expect_equal(
     nrow(hs17_conversion_no_map),
-    362 # many rows because without a map, 847310 gets distributed to many different products
+    181 # many rows because without a map, 847310 gets distributed to many different products
   )
 })
 
-test_that("HS 2012 -> HS 2017 final sum is equal", {
+test_that("6-digit HS 2012 -> HS 2017 final sum is equal", {
   expect_equal(
-    round(hs17_conversion_no_map %>% filter(partner != "World") %>% select(value) %>% sum(), 0),
-    hs12_to_convert %>% select(Value) %>% sum()
+    sum(hs17_conversion_no_map$Value),
+    sum(hs12_to_convert$Value)
   )
 })
 
-# Backwards, HS 2017 to HS 2012 conversion
-test_that("HS 2017 -> HS 2012 n:n test", {
+test_that("6-digit HS 2017 -> HS 2012 n:n test", {
   expect_equal(
-    round(hs12_conversion[(hs12_conversion$commodity_code == "847340") & (hs12_conversion$partner == "Philippines"), "value"], 0),
+    round(hs12_conversion[(hs12_conversion$CommodityCode == "847340") & (hs12_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
     83
   )
 })
 
-test_that("HS 2017 -> HS 2012 final sum is equal", {
+test_that("6-digit HS 2017 -> HS 2012 final sum is equal", {
   expect_equal(
-    round(hs12_conversion %>% filter(partner != "World") %>% select(value) %>% sum(), 0),
-    (hs17_map %>% filter(Year == 2017)) %>% select(Value) %>% sum()
+    sum(hs12_conversion$Value),
+    sum(hs17_map$Value)
+  )
+})
+
+test_that("4-digit HS 2012 -> HS 2017 1:n test", {
+  expect_equal(
+    hs12_conversion_4[(hs12_conversion_4$CommodityCode %in% c("8542", "8473")) & (hs12_conversion_4$PartnerLabel == "Philippines"), "Value"] %>% pull() %>% sum(),
+    hs12_4[(hs12_4$CommodityCode %in% c("8473")) & (hs12_4$PartnerLabel == "Philippines"), "Value"] %>% pull()
+  )
+})
+
+test_that("2-digit HS 2012 -> HS 2017 1:n test", {
+  expect_equal(
+    hs12_conversion_2[(hs12_conversion_2$CommodityCode %in% c("85", "84")) & (hs12_conversion_2$PartnerLabel == "Philippines"), "Value"] %>% pull() %>% sum(),
+    hs12_2[(hs12_2$CommodityCode %in% c("84", "85")) & (hs12_2$PartnerLabel == "Philippines"), "Value"] %>% pull() %>% sum()
   )
 })
