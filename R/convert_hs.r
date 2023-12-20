@@ -1,3 +1,4 @@
+#' @import data.table dplyr stringr
 #' @title Convert Comtrade data from one HS year to another
 #' @name convert_hs
 #' @description Convert Comtrade data from one HS year to another.Not that any commodity codes that are not made up exclusively of numbers (e.g., a value like "TOTAL"), will be dropped from the conversion
@@ -74,7 +75,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
     counter <- 0
     for (new_code in unique(eval(parse(text = str_interp("df$${commodity_column}"))))) {
       if (!quiet) {
-        print(paste0(counter, "/", length(unique(eval(parse(text = str_interp("df$${commodity_column}")))))) 
+        print(paste0(counter, "/", length(unique(eval(parse(text = str_interp("df$${commodity_column}")))))))
       }
       counter <- counter + 1
       

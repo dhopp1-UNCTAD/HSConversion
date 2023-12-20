@@ -1,4 +1,4 @@
-#' @import readxl
+#' @import readxl dplyr
 #' @title Get correspondence tables from UN stat
 #' @description Gets all correspondence tables from the UN and generates a CSV with all the mappings
 #' @param digit_level number of digits to create the correspondence table for, e.g., '6' for 6-digit, etc. 
