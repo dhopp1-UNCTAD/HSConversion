@@ -131,7 +131,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
             }
           }
           tmp_old_perc <- eval(parse(text = code_string))
-        
+          
           # mapping commodity code distribution
           # only use the mapping dataframe if 1) exists 2) n:n or 1:n 3) mapping data exists for those codes
           use_map <- FALSE
@@ -149,7 +149,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           if (length(all_related_new_codes) == 0) {
             all_related_new_codes <- "999999"
           }
-        
+          
           if (use_map) {
             code_string <- str_interp("map_df %>% filter(!!as.symbol(commodity_column) %in% all_related_new_codes) %>% group_by(!!as.symbol(commodity_column)) %>% summarise(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = sum(', x, ', na.rm=TRUE)')))), collapse = ', ')})")
             tmp_map <- eval(parse(text = code_string))
