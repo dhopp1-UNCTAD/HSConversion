@@ -158,70 +158,72 @@ test_that("6-digit HS 2012 -> HS 2017 1:n test", {
   )
 })
 
-if (FALSE) {
-  
-  # HS 2012 to HS 2017 tests
-  test_that("HS 2012 -> HS 2017 1:n test", {
-    expect_equal(
-      hs17_conversion[(hs17_conversion$commodity_code == "370500") & (hs17_conversion$partner == "Philippines"), "value"],
-      12
-    )
-  })
-  
-  test_that("HS 2012 -> HS 2017 n:1 test 1", {
-    expect_equal(
-      round(hs17_conversion[(hs17_conversion$commodity_code == "540253") & (hs17_conversion$partner == "Philippines"), "value"], 0),
-      5
-    )
-  })
-  
-  test_that("HS 2012 -> HS 2017 n:1 test 2", {
-    expect_equal(
-      round(hs17_conversion[(hs17_conversion$commodity_code == "540259") & (hs17_conversion$partner == "Philippines"), "value"], 0),
-      15
-    )
-  })
-  
-  test_that("HS 2012 -> HS 2017 n:n test 1", {
-    expect_equal(
-      round(hs17_conversion[(hs17_conversion$commodity_code == "847340") & (hs17_conversion$partner == "Philippines"), "value"], 0),
-      24
-    )
-  })
-  
-  test_that("HS 2012 -> HS 2017 n:n test 2", {
-    expect_equal(
-      round(hs17_conversion[(hs17_conversion$commodity_code == "854231") & (hs17_conversion$partner == "Philippines"), "value"], 0),
-      36
-    )
-  })
-  
-  test_that("HS 2012 -> HS 2017 no map_df", {
-    expect_equal(
-      nrow(hs17_conversion_no_map),
-      362 # many rows because without a map, 847310 gets distributed to many different products
-    )
-  })
-  
-  test_that("HS 2012 -> HS 2017 final sum is equal", {
-    expect_equal(
-      round(hs17_conversion_no_map %>% filter(partner != "World") %>% select(value) %>% sum(), 0),
-      hs12_to_convert %>% select(Value) %>% sum()
-    )
-  })
-  
-  # Backwards, HS 2017 to HS 2012 conversion
-  test_that("HS 2017 -> HS 2012 n:n test", {
-    expect_equal(
-      round(hs12_conversion[(hs12_conversion$commodity_code == "847340") & (hs12_conversion$partner == "Philippines"), "value"], 0),
-      83
-    )
-  })
-  
-  test_that("HS 2017 -> HS 2012 final sum is equal", {
-    expect_equal(
-      round(hs12_conversion %>% filter(partner != "World") %>% select(value) %>% sum(), 0),
-      (hs17_map %>% filter(Year == 2017)) %>% select(Value) %>% sum()
-    )
-  })
-} 
+test_that("6-digit HS 2012 -> HS 2017 n:1 test 1", {
+  expect_equal(
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "540253") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
+    5
+  )
+})
+
+test_that("6-digit HS 2012 -> HS 2017 n:1 test 2", {
+  expect_equal(
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "540259") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
+    15
+  )
+})
+
+test_that("6-digit HS 2012 -> HS 2017 n:n test 1", {
+  expect_equal(
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "847340") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
+    24
+  )
+})
+
+test_that("6-digit HS 2012 -> HS 2017 n:n test 2", {
+  expect_equal(
+    round(hs17_conversion[(hs17_conversion$CommodityCode == "854231") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
+    36
+  )
+})
+
+test_that("6-digit HS 2012 -> HS 2017 no map_df", {
+  expect_equal(
+    nrow(hs17_conversion_no_map),
+    181 # many rows because without a map, 847310 gets distributed to many different products
+  )
+})
+
+test_that("6-digit HS 2012 -> HS 2017 final sum is equal", {
+  expect_equal(
+    sum(hs17_conversion_no_map$Value),
+    sum(hs12_to_convert$Value)
+  )
+})
+
+test_that("6-digit HS 2017 -> HS 2012 n:n test", {
+  expect_equal(
+    round(hs12_conversion[(hs12_conversion$CommodityCode == "847340") & (hs12_conversion$PartnerLabel == "Philippines"), "Value"], 0) %>% pull(),
+    83
+  )
+})
+
+test_that("6-digit HS 2017 -> HS 2012 final sum is equal", {
+  expect_equal(
+    sum(hs12_conversion$Value),
+    sum(hs17_map$Value)
+  )
+})
+
+test_that("4-digit HS 2012 -> HS 2017 1:n test", {
+  expect_equal(
+    hs12_conversion_4[(hs12_conversion_4$CommodityCode %in% c("8542", "8473")) & (hs12_conversion_4$PartnerLabel == "Philippines"), "Value"] %>% pull() %>% sum(),
+    hs12_4[(hs12_4$CommodityCode %in% c("8473")) & (hs12_4$PartnerLabel == "Philippines"), "Value"] %>% pull()
+  )
+})
+
+test_that("2-digit HS 2012 -> HS 2017 1:n test", {
+  expect_equal(
+    hs12_conversion_2[(hs12_conversion_2$CommodityCode %in% c("85", "84")) & (hs12_conversion_2$PartnerLabel == "Philippines"), "Value"] %>% pull() %>% sum(),
+    hs12_2[(hs12_2$CommodityCode %in% c("84", "85")) & (hs12_2$PartnerLabel == "Philippines"), "Value"] %>% pull() %>% sum()
+  )
+})
