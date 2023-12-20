@@ -200,7 +200,11 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
               }
             }
           } else { # dummy equal distribution if no map_df provided
-            code_string <- str_interp("data.table(${commodity_column} = ${all_related_new_codes}, ${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = 1')))), collapse = ', ')})")
+            if (length(all_related_new_codes) == 1) { # force character/quotes if only a single code
+              code_string <- str_interp("data.table(${commodity_column} = '${all_related_new_codes}', ${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = 1')))), collapse = ', ')})")
+            } else {
+              code_string <- str_interp("data.table(${commodity_column} = ${all_related_new_codes}, ${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = 1')))), collapse = ', ')})")
+            }
             tmp_map <- eval(parse(text = code_string))
           }
           
@@ -220,7 +224,7 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
           code_string <- str_interp("tmp_final_df %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, '.x * ', x, '.y')))), collapse = ', ')})")
           tmp_final_df <- eval(parse(text = code_string))
           tmp_final_df <- tmp_final_df %>% 
-            select(column_names)
+            select(all_of(column_names))
           
           code_string <- code_string <- str_interp("tmp_final_df %>% mutate(${paste0(unname(unlist(sapply(agg_columns, function (x) paste0(x, ' = ', x, ' * sum(tmp_old$', x, ', na.rm=TRUE)')))), collapse = ', ')})")
           tmp_final_df <- eval(parse(text = code_string))
