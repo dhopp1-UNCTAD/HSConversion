@@ -141,27 +141,26 @@ hs12_conversion_4 <- convert_hs(
     map_df = country_aggregation_2,
     quiet = TRUE
   )
+  
+### 6-digit tests
+# HS 2012 to HS 2017 tests
+test_that("6-digit HS 2012 -> HS 2017 1:1 test", {
+  expect_equal(
+    hs17_conversion[(hs17_conversion$CommodityCode == "100890") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"] %>% pull(),
+    100
+  )
+})
+
+test_that("6-digit HS 2012 -> HS 2017 1:n test", {
+  expect_equal(
+    hs17_conversion[(hs17_conversion$CommodityCode == "370500") & (hs17_conversion$PartnerLabel == "Philippines"), "Value"] %>% pull(),
+    12
+  )
+})
 
 if (FALSE) {
-  # testing reverse, from HS17 to HS12
-  hs12_conversion <- convert_hs(correspondence_table = correspondence_tables, hs_from = 2017, hs_to = 2012, df = (hs17_map %>% filter(Year == 2017)), map_df = hs12_to_convert)
-  
-  # country aggregation test
-  test_that("Country aggregation for mapping", {
-    expect_equal(
-      country_aggregation[country_aggregation$CommodityCode == "540253", "Value"],
-      11
-    )
-  })
   
   # HS 2012 to HS 2017 tests
-  test_that("HS 2012 -> HS 2017 1:1 test", {
-    expect_equal(
-      hs17_conversion[(hs17_conversion$commodity_code == "100890") & (hs17_conversion$partner == "Philippines"), "value"],
-      100
-    )
-  })
-  
   test_that("HS 2012 -> HS 2017 1:n test", {
     expect_equal(
       hs17_conversion[(hs17_conversion$commodity_code == "370500") & (hs17_conversion$partner == "Philippines"), "value"],
