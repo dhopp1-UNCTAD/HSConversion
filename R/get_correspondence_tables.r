@@ -9,7 +9,8 @@
 #' \item{first_name}{the hs version of the 'to' product code}
 #' \item{second_name}{the hs version of the 'from' product code}
 #' \item{relationship}{the correspondence type of this product pair, e.g. 1:n, n:n, etc.}
-
+#'
+#' @export
 get_correspondence_tables <- function (digit_level = 6) {
   # getting correspondence file urls
   correspondence_url <- "https://unstats.un.org/unsd/classifications/Econ"
@@ -168,7 +169,8 @@ get_correspondence_tables <- function (digit_level = 6) {
 #' @return A number or string
 #' 
 #' \item{hs_name}{the HS name or year}
-
+#'
+#' @export
 convert_hs_name <- function (hs_name) {
   # if character, convert name to year
   if (typeof(hs_name) == "character") {

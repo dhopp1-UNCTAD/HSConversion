@@ -17,7 +17,6 @@ options(dplyr.summarise.inform = FALSE)
 #' @return A \code{dataframe} 
 #'
 #' @export
-
 convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, group_columns, commodity_column, aggregate_order = NA, map_df = NA, quiet = TRUE) {
   # keep only necessary columns
   column_names <- colnames(df)[colnames(df) %in% c(agg_columns, group_columns, commodity_column)]

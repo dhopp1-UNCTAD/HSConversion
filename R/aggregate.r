@@ -40,7 +40,6 @@ aggregate_country_data <- function (data, agg_columns, group_columns) {
 #' @return A \code{dataframe} 
 #'
 #' @export
-
 aggregate_digit_level <- function (df, agg_columns, group_columns, commodity_column, digit_level) {
   # only consider columns that are either to be aggregated or grouped by
   columns <- colnames(df)[colnames(df) %in% c(agg_columns, group_columns, commodity_column)]

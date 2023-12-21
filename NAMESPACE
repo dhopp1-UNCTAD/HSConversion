@@ -3,6 +3,8 @@
 export(aggregate_country_data)
 export(aggregate_digit_level)
 export(convert_hs)
+export(convert_hs_name)
+export(get_correspondence_tables)
 import(data.table)
 import(dplyr)
 import(readxl)
