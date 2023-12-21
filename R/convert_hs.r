@@ -76,7 +76,8 @@ convert_hs <- function (correspondence_tables, hs_from, hs_to, df, agg_columns, 
   
   # getting types of columns
   col_type_list <- df %>% 
-    summarise_all(class) %>% as.list
+    summarise_all(class) %>% as.list %>% 
+    sapply(function (x) str_replace(x, "64", "")) # replace integer64 with integer
   
   # converting dataframes to datatables for faster processing/filtering later on
   map_df <- data.table(map_df)
